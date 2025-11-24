@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import JCurve from '../components/JCurve';
@@ -5,28 +6,27 @@ import Flywheel from '../components/Flywheel';
 import CaseStudyCard from '../components/CaseStudyCard';
 import NewsletterBlock from '../components/NewsletterBlock';
 import { ArrowDown } from 'lucide-react';
+import { getPosts, type WPPost } from '../services/wordpress';
 
 const Home = () => {
-    const recentStudies = [
-        {
-            category: 'Fintech',
-            title: 'Stripe: The API Economy',
-            description: 'How Stripe turned seven lines of code into a $50B ecosystem lock-in.',
-            slug: 'stripe-api-strategy'
-        },
-        {
-            category: 'SaaS',
-            title: 'Figma: Multiplayer by Default',
-            description: 'Deconstructing the browser-first architecture that killed Sketch.',
-            slug: 'figma-multiplayer'
-        },
-        {
-            category: 'AI',
-            title: 'Midjourney: Zero to One',
-            description: 'Bootstrapping a community-led giant without a marketing budget.',
-            slug: 'midjourney-growth'
-        }
-    ];
+    const [recentStudies, setRecentStudies] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            const data = await getPosts();
+            // Take only the first 3 posts
+            const mapped = data.slice(0, 3).map(post => ({
+                category: 'Strategy',
+                title: post.title.rendered.replace(/<[^>]*>?/gm, ''),
+                description: post.excerpt.rendered.replace(/<[^>]*>?/gm, '').slice(0, 100) + '...',
+                slug: post.slug
+            }));
+            setRecentStudies(mapped);
+            setLoading(false);
+        };
+        fetchPosts();
+    }, []);
 
     return (
         <div className="min-h-screen bg-cream selection:bg-gold/30">
@@ -109,11 +109,17 @@ const Home = () => {
                         </a>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {recentStudies.map((study) => (
-                            <CaseStudyCard key={study.slug} {...study} />
-                        ))}
-                    </div>
+                    {loading ? (
+                        <div className="flex justify-center py-12">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gold"></div>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {recentStudies.map((study) => (
+                                <CaseStudyCard key={study.slug} {...study} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </section>
 

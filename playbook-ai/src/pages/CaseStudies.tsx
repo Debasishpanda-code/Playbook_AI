@@ -1,28 +1,40 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import CaseStudyCard from '../components/CaseStudyCard';
 import NewsletterBlock from '../components/NewsletterBlock';
 import { clsx } from 'clsx';
+import { getPosts, type WPPost } from '../services/wordpress';
 
 const CaseStudies = () => {
     const [filter, setFilter] = useState('All');
+    const [posts, setPosts] = useState<WPPost[]>([]);
+    const [loading, setLoading] = useState(true);
 
     const filters = ['All', 'SaaS', 'Fintech', 'AI', 'Marketplace'];
 
-    const allStudies = [
-        { category: 'Fintech', title: 'Stripe: The API Economy', description: 'How Stripe turned seven lines of code into a $50B ecosystem lock-in.', slug: 'stripe-api-strategy' },
-        { category: 'SaaS', title: 'Figma: Multiplayer by Default', description: 'Deconstructing the browser-first architecture that killed Sketch.', slug: 'figma-multiplayer' },
-        { category: 'AI', title: 'Midjourney: Zero to One', description: 'Bootstrapping a community-led giant without a marketing budget.', slug: 'midjourney-growth' },
-        { category: 'Marketplace', title: 'Airbnb: Trust Mechanics', description: 'Designing systems that allow strangers to sleep in each others homes.', slug: 'airbnb-trust' },
-        { category: 'SaaS', title: 'Notion: The Lego Block Era', description: 'Why flexible software is winning over rigid point solutions.', slug: 'notion-growth' },
-        { category: 'AI', title: 'OpenAI: Capped Profit', description: 'The strange corporate structure behind the worlds most important AI lab.', slug: 'openai-structure' },
-        { category: 'Fintech', title: 'Nubank: The Purple Ocean', description: 'Finding blue oceans in the most competitive market in the world.', slug: 'nubank-strategy' },
-    ];
+    useEffect(() => {
+        const fetchPosts = async () => {
+            const data = await getPosts();
+            setPosts(data);
+            setLoading(false);
+        };
+        fetchPosts();
+    }, []);
+
+    // Helper to strip HTML tags from excerpt
+    const stripHtml = (html: string) => html.replace(/<[^>]*>?/gm, '');
+
+    const mappedStudies = posts.map(post => ({
+        category: 'Strategy', // Default category for now
+        title: stripHtml(post.title.rendered),
+        description: stripHtml(post.excerpt.rendered).slice(0, 120) + '...',
+        slug: post.slug
+    }));
 
     const filteredStudies = filter === 'All'
-        ? allStudies
-        : allStudies.filter(study => study.category === filter);
+        ? mappedStudies
+        : mappedStudies.filter(study => study.category === filter);
 
     return (
         <div className="min-h-screen bg-cream">
@@ -53,23 +65,29 @@ const CaseStudies = () => {
                 </div>
 
                 {/* Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {filteredStudies.map((study, index) => (
-                        <React.Fragment key={study.slug}>
-                            <CaseStudyCard {...study} />
+                {loading ? (
+                    <div className="flex justify-center py-20">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold"></div>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {filteredStudies.map((study, index) => (
+                            <React.Fragment key={study.slug}>
+                                <CaseStudyCard {...study} />
 
-                            {/* Ad Slot Simulation every 3rd card */}
-                            {(index + 1) % 3 === 0 && (
-                                <div className="bg-gray-50 border border-gray-200 p-8 flex flex-col justify-center items-center text-center">
-                                    <span className="text-[10px] uppercase tracking-widest text-gray-400 mb-4">Sponsored</span>
-                                    <h4 className="font-serif text-xl mb-2">Linear</h4>
-                                    <p className="text-sm text-charcoal/60 mb-6">The issue tracking tool you'll actually enjoy using.</p>
-                                    <button className="text-xs font-bold uppercase tracking-widest border-b border-charcoal pb-1">Try Linear</button>
-                                </div>
-                            )}
-                        </React.Fragment>
-                    ))}
-                </div>
+                                {/* Ad Slot Simulation every 3rd card */}
+                                {(index + 1) % 3 === 0 && (
+                                    <div className="bg-gray-50 border border-gray-200 p-8 flex flex-col justify-center items-center text-center">
+                                        <span className="text-[10px] uppercase tracking-widest text-gray-400 mb-4">Sponsored</span>
+                                        <h4 className="font-serif text-xl mb-2">Linear</h4>
+                                        <p className="text-sm text-charcoal/60 mb-6">The issue tracking tool you'll actually enjoy using.</p>
+                                        <button className="text-xs font-bold uppercase tracking-widest border-b border-charcoal pb-1">Try Linear</button>
+                                    </div>
+                                )}
+                            </React.Fragment>
+                        ))}
+                    </div>
+                )}
             </div>
 
             <NewsletterBlock />
