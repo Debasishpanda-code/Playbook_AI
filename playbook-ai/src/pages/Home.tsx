@@ -1,3 +1,14 @@
+/**
+ * Home Page Component
+ * 
+ * The landing page for PlaybookAI featuring:
+ * - Hero section with headline
+ * - Manifesto/mission statement
+ * - Interactive mental model demonstrations (J-Curve, Flywheel)
+ * - Recent analysis section (3 latest blog posts fetched from WordPress)
+ * - Newsletter signup block
+ */
+
 import { useEffect, useState } from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -9,24 +20,55 @@ import { ArrowDown } from 'lucide-react';
 import { getPosts, type WPPost } from '../services/wordpress';
 
 const Home = () => {
+    // State to store the 3 most recent blog posts
     const [recentStudies, setRecentStudies] = useState<any[]>([]);
+
+    // Loading state to show spinner while fetching data
     const [loading, setLoading] = useState(true);
 
+    /**
+     * Fetch and Process Recent Posts
+     * 
+     * This effect runs once when the component mounts.
+     * It fetches posts from WordPress and transforms them for display.
+     * 
+     * Data Transformation Steps:
+     * 1. Fetch 6 posts from WordPress API
+     * 2. Take only the first 3 (for the home page)
+     * 3. Strip HTML tags from title and excerpt
+     * 4. Truncate description to 100 characters
+     * 5. Map to a simple object structure for CaseStudyCard
+     */
     useEffect(() => {
         const fetchPosts = async () => {
+            // Fetch posts from WordPress
             const data = await getPosts();
-            // Take only the first 3 posts
+
+            // Transform WordPress data to match our UI needs
+            // Take only the first 3 posts for the home page
             const mapped = data.slice(0, 3).map(post => ({
-                category: 'Strategy',
+                category: 'Strategy',  // Default category for now
+
+                // Remove HTML tags from title using regex
+                // WordPress returns rendered HTML, we want plain text
                 title: post.title.rendered.replace(/<[^>]*>?/gm, ''),
+
+                // Remove HTML tags and truncate to 100 chars + ellipsis
                 description: post.excerpt.rendered.replace(/<[^>]*>?/gm, '').slice(0, 100) + '...',
+
+                // Slug is URL-safe identifier (e.g., "stripe-api-strategy")
                 slug: post.slug
             }));
+
+            // Update state with transformed data
             setRecentStudies(mapped);
+
+            // Hide loading spinner
             setLoading(false);
         };
+
         fetchPosts();
-    }, []);
+    }, []); // Empty dependency array = run once on mount
 
     return (
         <div className="min-h-screen bg-cream selection:bg-gold/30">
