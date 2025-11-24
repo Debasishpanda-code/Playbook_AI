@@ -1,0 +1,25 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cream text-charcoal font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply uppercase tracking-widest text-xs font-semibold px-6 py-3 border border-charcoal hover:bg-charcoal hover:text-cream transition-all duration-300;
+  }
+  
+  .glass-panel {
+    @apply bg-white/80 backdrop-blur-md border border-white/20;
+  }
+}
