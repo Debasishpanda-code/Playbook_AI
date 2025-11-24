@@ -6,15 +6,24 @@ const Newsletter = () => {
     const [email, setEmail] = useState('');
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
+    /**
+     * Submit to WordPress Contact Form 7
+     * Same implementation as NewsletterBlock.tsx
+     */
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setStatus('loading');
 
         try {
-            const response = await fetch('http://localhost:3001/api/subscribe', {
+            const WP_URL = 'https://techcrunch.com'; // Change to your WordPress URL
+            const FORM_ID = '123'; // Change to your Contact Form 7 ID
+
+            const formData = new FormData();
+            formData.append('your-email', email);
+
+            const response = await fetch(`${WP_URL}/wp-json/contact-form-7/v1/contact-forms/${FORM_ID}/feedback`, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email }),
+                body: formData,
             });
 
             if (!response.ok) throw new Error('Failed to subscribe');
